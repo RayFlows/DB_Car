@@ -1,5 +1,5 @@
 # video_classification.py
-import cv2, os, threading, time, uuid, numpy as np
+import os, cv2, time, uuid, threading, queue, numpy as np
 from datetime import datetime
 from ultralytics import YOLO
 import tensorflow as tf
@@ -7,6 +7,36 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.layers import DepthwiseConv2D
 from queue import Queue
 import camera_receiver
+
+# ---------- 去眩光增强函数  (### <<< 新增 >>>)
+def _bright_lut(th=220, k=0.45):
+    lut = np.arange(256, dtype=np.uint8)
+    lut[th:] = (th + (lut[th:] - th) * k).astype(np.uint8)
+    return lut
+_LUT_BASE = _bright_lut(220, 0.45)
+
+def _apply_large_area(v, area_th=2000):
+    mask = (v > 230).astype(np.uint8)
+    n, lbl, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+    lut_big = _bright_lut(200, 0.30)
+    v_big   = cv2.LUT(v, lut_big)
+    v_out   = v.copy()
+    for i in range(1, n):
+        if stats[i, cv2.CC_STAT_AREA] > area_th:
+            v_out[lbl == i] = v_big[lbl == i]
+    return v_out
+
+def deglare_enhance(bgr):
+    """温和去反光 + 轻锐化"""
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    v = cv2.LUT(v, _LUT_BASE)
+    v = _apply_large_area(v)
+    res = cv2.cvtColor(cv2.merge((h, s, v)), cv2.COLOR_HSV2BGR)
+    blur = cv2.GaussianBlur(res, (5, 5), 0)
+    return cv2.addWeighted(res, 1.15, blur, -0.15, 0)
+# ---------- 去反光函数结束 ----------
+
 
 SAVE_DIR = "./captured_cats"
 YOLO_MODEL_PATH = "./yolov8n.pt"
@@ -52,6 +82,7 @@ def enhance(frame):
     processed_frame = cv2.filter2D(processed_frame, -1, kernel_sharpening)
     
     return processed_frame
+
 def pad_resize(img, size=300):
     """调整图像大小并填充"""
     h,w = img.shape[:2]; s = size/max(h,w)
@@ -72,8 +103,11 @@ def classify_cat(img):
 def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
     """处理单帧图像"""
     global last_prediction
+    start = time.time() 
     
     # 使用YOLO检测猫
+    frame = deglare_enhance(frame)
+
     res = detector.predict(frame, conf=conf_th, verbose=False)[0]
     best_box, best_conf = None, 0.0
     
@@ -99,7 +133,7 @@ def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
         def worker(img, box):
             xi,yi,xa,ya = box
             crop = img[yi:ya, xi:xa]
-            padded = pad_resize(enhance(crop))
+            padded = pad_resize(crop)
             fname = f"cat_{datetime.now():%Y%m%d_%H%M%S_%f}_{uuid.uuid4().hex[:6]}.jpg"
             cv2.imwrite(os.path.join(SAVE_DIR,fname), padded)
             lbl, cf = classify_cat(padded)
@@ -108,12 +142,19 @@ def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
             print(f"✔ Saved {fname} | {lbl} ({cf:.2f})")
         
         threading.Thread(target=worker,args=(frame.copy(),(x1,y1,x2,y2)),daemon=True).start()
+
+        latency = (time.time() - start) * 1000
+        cv2.putText(frame, f"{latency:.0f} ms", (10, 28),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
     
     return frame
 
 def get_last_prediction():
     """获取最后的预测结果"""
-    return last_prediction["label"], last_prediction["conf"]
+    if last_prediction["conf"] >= 0.7:
+        return last_prediction["label"], last_prediction["conf"]
+    else:
+        return "", 0.0  # 返回空字符串和0置信度
 
 def generate_processed_frames():
     """生成处理后的视频帧"""
