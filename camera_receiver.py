@@ -1,44 +1,5 @@
 # #camera_recevier.py
 
-# import cv2
-# import zmq
-# import base64
-# import numpy as np
-
-# # 创建ZMQ对象
-# context = zmq.Context()
-# footage_socket = context.socket(zmq.PAIR)
-# footage_socket.bind('tcp://*:5555')
-# print("Waiting for connection...")
-
-# try:
-#     while True:
-#         # 接收数据
-#         jpg_as_text = footage_socket.recv()
-        
-#         # Base64解码
-#         img_data = base64.b64decode(jpg_as_text)
-        
-#         # 转换为numpy数组
-#         npimg = np.frombuffer(img_data, dtype=np.uint8)
-        
-#         # 解码图像
-#         source = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
-        
-#         if source is not None:
-#             cv2.imshow("Pi Camera Stream", source)
-        
-#         # 按'q'退出
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
-            
-# except KeyboardInterrupt:
-#     print("Stopping...")
-# finally:
-#     cv2.destroyAllWindows()
-#     footage_socket.close()
-#     context.term()
-
 import cv2
 import zmq
 import base64
