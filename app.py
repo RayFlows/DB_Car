@@ -10,7 +10,7 @@ import requests
 app = Flask(__name__)
 
 # 全局状态变量
-current_cat_breed = "等待识别..."
+current_cat_breed = "Waiting..."
 current_confidence = 0.0
 
 @app.route('/')
@@ -44,9 +44,12 @@ def get_status():
     except:
         active_keys = []
 
+    # 当置信度低于0.7时，显示"分析中..."而不是品种名称
+    display_breed = current_cat_breed if current_confidence >= 0.7 else "分析中..."
+
     return {
         'keys': active_keys,
-        'cat_breed': current_cat_breed,
+        'cat_breed': display_breed,#current_cat_breed,
         'confidence': current_confidence
     }
 

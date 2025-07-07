@@ -136,7 +136,10 @@ def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
 
 def get_last_prediction():
     """获取最后的预测结果"""
-    return last_prediction["label"], last_prediction["conf"]
+    if last_prediction["conf"] >= 0.7:
+        return last_prediction["label"], last_prediction["conf"]
+    else:
+        return "", 0.0  # 返回空字符串和0置信度
 
 def generate_processed_frames():
     """生成处理后的视频帧"""
