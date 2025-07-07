@@ -1,0 +1,12 @@
+# requirements.txt
+
+Flask==3.0.2
+opencv-python==4.9.0.80
+pyzmq==26.0.0
+numpy==1.26.4
+keyboard==0.13.5
+requests==2.31.0
+ultralytics==8.2.0
+tensorflow==2.16.1
+h5py==3.11.0
+scikit-image==0.22.0
