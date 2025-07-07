@@ -7,6 +7,7 @@ from tensorflow.keras.applications.efficientnet import preprocess_input
 from tensorflow.keras.layers import DepthwiseConv2D
 from queue import Queue
 import camera_receiver
+import socket
 
 # ---------- 去眩光增强函数  (### <<< 新增 >>>)
 def _bright_lut(th=220, k=0.45):
@@ -50,6 +51,20 @@ classifier = None
 
 # 最后预测结果
 last_prediction = {"label": "", "conf": 0.0}
+
+# 新增: 品种到指令的映射
+BREED_COMMANDS = {
+    'Ragdolls': 'c',
+    'Singapura cats': 'v',
+    'Persian cats': 'b',
+    'Sphynx cats': 'n',
+    'Pallas cats': 'm'
+}
+
+# 新增: 最后发送的品种和时间
+last_sent_breed = None
+last_sent_time = 0
+SEND_COOLDOWN = 5  # 5秒冷却时间
 
 class DepthwiseConv2DCompat(DepthwiseConv2D):
     def __init__(self,*a,groups=1,**k): super().__init__(*a,**k)
@@ -100,6 +115,40 @@ def classify_cat(img):
     idx = int(np.argmax(p)); 
     return CLASSES[idx], float(p[idx])
 
+# 新增: 发送指令到树莓派
+def send_breed_command(breed):
+    """发送品种指令到树莓派"""
+    global last_sent_breed, last_sent_time
+    
+    # 检查冷却时间
+    current_time = time.time()
+    if breed == last_sent_breed and (current_time - last_sent_time) < SEND_COOLDOWN:
+        return
+    
+    # 获取对应指令
+    command_char = BREED_COMMANDS.get(breed, 'x')  # 默认为停止指令
+    
+    # 创建UDP套接字
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.settimeout(0.5)
+        
+        # 树莓派地址 - 与keyboard_controller.py保持一致
+        RASPBERRY_IP = "frp-fit.com"
+        CONTROL_PORT = 26669
+        
+        # 发送指令
+        sock.sendto(command_char.encode(), (RASPBERRY_IP, CONTROL_PORT))
+        print(f"✅ 已发送品种指令: {breed} -> '{command_char}'")
+        
+        # 更新发送记录
+        last_sent_breed = breed
+        last_sent_time = current_time
+    except Exception as e:
+        print(f"❌ 发送品种指令失败: {e}")
+    finally:
+        sock.close()
+
 def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
     """处理单帧图像"""
     global last_prediction
@@ -140,6 +189,10 @@ def process_frame(frame, conf_th=0.25, cls_disp_th=0.70):
             last_prediction["label"] = lbl
             last_prediction["conf"] = cf
             print(f"✔ Saved {fname} | {lbl} ({cf:.2f})")
+
+            # 新增: 当置信度≥0.7时自动发送指令
+            if cf >= cls_disp_th:
+                send_breed_command(lbl)
         
         threading.Thread(target=worker,args=(frame.copy(),(x1,y1,x2,y2)),daemon=True).start()
 
