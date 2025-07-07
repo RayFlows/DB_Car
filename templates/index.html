@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>猫咪迷宫控制系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>猫咪迷宫控制系统</h1>
+        
+        <div class="content">
+            <div class="video-container">
+                <h2>实时视频流</h2>
+                <img src="{{ url_for('video_feed') }}" id="video-feed">
+            </div>
+            
+            <div class="control-panel">
+                <h2>控制状态</h2>
+                <div class="keyboard-status">
+                    <h3>当前按键:</h3>
+                    <div id="active-keys"></div>
+                </div>
+                
+                <div class="cat-info">
+                    <h3>猫品种识别:</h3>
+                    <div id="cat-breed"></div>
+                    <div id="cat-confidence"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 更新状态信息
+        function updateStatus() {
+            $.getJSON("/status", function(data) {
+                // 更新按键状态
+                let keysHtml = "";
+                if (data.keys.length > 0) {
+                    keysHtml = data.keys.map(key => `<span class="key">${key}</span>`).join('');
+                } else {
+                    keysHtml = "<span class='no-keys'>无按键</span>";
+                }
+                $("#active-keys").html(keysHtml);
+                
+                // 更新猫品种信息
+                $("#cat-breed").text(data.cat_breed);
+                $("#cat-confidence").text(`置信度: ${(data.confidence * 100).toFixed(2)}%`);
+            });
+        }
+        
+        // 初始化和定期更新
+        $(document).ready(function() {
+            updateStatus();
+            setInterval(updateStatus, 500);  // 每500ms更新一次
+        });
+    </script>
+</body>
+</html>
