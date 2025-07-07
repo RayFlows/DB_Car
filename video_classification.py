@@ -38,12 +38,20 @@ def initialize_models():
     )
     print("模型初始化完成")
 
-def enhance(img, up=2):
-    """增强图像质量"""
-    out = cv2.detailEnhance(img, sigma_s=10, sigma_r=0.15)
-    h, w = out.shape[:2]
-    return cv2.resize(out,(w*up,h*up),interpolation=cv2.INTER_CUBIC)
+def enhance(frame):
+    denoised_frame = cv2.fastNlMeansDenoisingColored(frame, None, 5, 5, 5, 15)
 
+    gray = cv2.cvtColor(denoised_frame, cv2.COLOR_BGR2GRAY)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced_gray = clahe.apply(gray)
+    processed_frame = cv2.cvtColor(enhanced_gray, cv2.COLOR_GRAY2BGR)
+
+    kernel_sharpening = np.array([[-1,-1,-1],
+                                  [-1, 9,-1],
+                                  [-1,-1,-1]])
+    processed_frame = cv2.filter2D(processed_frame, -1, kernel_sharpening)
+    
+    return processed_frame
 def pad_resize(img, size=300):
     """调整图像大小并填充"""
     h,w = img.shape[:2]; s = size/max(h,w)
