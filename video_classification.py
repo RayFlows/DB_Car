@@ -42,8 +42,8 @@ def deglare_enhance(bgr):
 
 SAVE_DIR = "./captured_cats"
 YOLO_MODEL_PATH = "./yolov8n.pt"
-# CLASSIFY_MODEL_PATH = "./model/finetuned_model_final.h5"  
-CLASSIFY_MODEL_PATH = "./model/mix_dataset_model.h5"
+CLASSIFY_MODEL_PATH = "./model/finetuned_model_final.h5"  
+# CLASSIFY_MODEL_PATH = "./model/mix_dataset_model.h5"
 CLASSES = ['Pallas cats','Persian cats','Ragdolls','Singapura cats','Sphynx cats']
 os.makedirs(SAVE_DIR, exist_ok=True)
 

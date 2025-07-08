@@ -1,0 +1,22 @@
+# requirements.txt
+
+Flask==3.0.2
+opencv-python==4.9.0.80
+pyzmq==26.0.0
+numpy==1.26.4
+keyboard==0.13.5
+requests==2.31.0
+ultralytics==8.2.0
+tensorflow==2.16.1
+h5py==3.11.0
+scikit-image==0.22.0
+
+
+ua-parser==1.0.1
+ua-parser-builtins==0.18.0.post1
+ultralytics==8.3.162
+ultralytics-thop==2.0.14
+unicodedata2==15.1.0
+urllib3==2.4.0
+utils==1.0.2
+wcwidth==0.2.13
