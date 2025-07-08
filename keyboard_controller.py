@@ -7,8 +7,10 @@ import sys
 from flask import Flask, jsonify
 
 # 配置信息
-RASPBERRY_IP = "frp-fit.com"  # 树莓派公网IP
-CONTROL_PORT = 26669           # 树莓派控制端口
+RASPBERRY_IP = "172.20.10.2"   #"frp-fit.com"  # 树莓派公网IP
+CONTROL_PORT = 5556            #26669           # 树莓派控制端口
+
+
 
 # 创建UDP套接字
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

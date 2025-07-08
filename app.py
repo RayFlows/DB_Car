@@ -13,6 +13,14 @@ app = Flask(__name__)
 current_cat_breed = "Waiting..."
 current_confidence = 0.0
 
+# 允许显示的控制按键列表
+ALLOWED_KEYS = {
+    'w', 'a', 's', 'd', 'q', 'e', 'x', 
+    '+', '-', '1', '2', '3', 
+    'left', 'right', 'up', 'down', 'space', '0',
+    'c', 'v', 'b', 'n', 'm'
+}
+
 @app.route('/')
 def index():
     """主页面"""
@@ -44,11 +52,14 @@ def get_status():
     except:
         active_keys = []
 
+    # 过滤只显示允许的控制按键
+    filtered_keys = [key for key in active_keys if key in ALLOWED_KEYS]
+
     # 当置信度低于0.7时，显示"分析中..."而不是品种名称
     display_breed = current_cat_breed if current_confidence >= 0.7 else "分析中..."
 
     return {
-        'keys': active_keys,
+        'keys': filtered_keys,#active_keys,
         'cat_breed': display_breed,#current_cat_breed,
         'confidence': current_confidence
     }
