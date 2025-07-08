@@ -8,6 +8,7 @@ from tensorflow.keras.layers import DepthwiseConv2D
 from queue import Queue
 import camera_receiver
 import socket
+from tensorflow.keras.utils import custom_object_scope
 
 # ---------- 去眩光增强函数  (### <<< 新增 >>>)
 def _bright_lut(th=220, k=0.45):
@@ -77,11 +78,11 @@ def initialize_models():
     detector = YOLO(YOLO_MODEL_PATH)
     
     print("初始化EfficientNetB3分类模型...")
-    classifier = tf.keras.models.load_model(
-        CLASSIFY_MODEL_PATH,
-        compile=False, 
-        custom_objects={'DepthwiseConv2D': DepthwiseConv2DCompat}
-    )
+    with custom_object_scope({'DepthwiseConv2DCompat': DepthwiseConv2DCompat}):
+        classifier = tf.keras.models.load_model(
+            CLASSIFY_MODEL_PATH,
+            compile=False
+        )
     print("模型初始化完成")
 
 def enhance(frame):
