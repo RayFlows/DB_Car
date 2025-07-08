@@ -6,12 +6,16 @@ import camera_receiver
 import video_classification
 import time
 import requests
+from radar_server import start_radar_server, get_radar_data  # 新增
 
 app = Flask(__name__)
 
 # 全局状态变量
 current_cat_breed = "Waiting..."
 current_confidence = 0.0
+
+# 启动雷达服务器
+start_radar_server()
 
 # 允许显示的控制按键列表
 ALLOWED_KEYS = {
@@ -55,13 +59,17 @@ def get_status():
     # 过滤只显示允许的控制按键
     filtered_keys = [key for key in active_keys if key in ALLOWED_KEYS]
 
+    # 获取雷达数据
+    radar_info = get_radar_data()
+
     # 当置信度低于0.7时，显示"分析中..."而不是品种名称
     display_breed = current_cat_breed if current_confidence >= 0.7 else "分析中..."
 
     return {
         'keys': filtered_keys,#active_keys,
         'cat_breed': display_breed,#current_cat_breed,
-        'confidence': current_confidence
+        'confidence': current_confidence,
+        'radar': radar_info  # 包含雷达数据
     }
 
 def update_status():

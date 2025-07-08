@@ -71,6 +71,28 @@ h1 {
     font-style: italic;
 }
 
+/* 雷达数据显示样式 */
+.radar-status {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #2c3e50;
+    border-radius: 8px;
+    color: #ecf0f1;
+}
+
+.radar-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.radar-label {
+    font-weight: bold;
+    color: #3498db;
+}
+
+
 #cat-breed {
     font-size: 18px;
     font-weight: bold;
@@ -81,3 +103,4 @@ h1 {
 #cat-confidence {
     color: #7f8c8d;
 }
+

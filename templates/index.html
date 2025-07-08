@@ -28,6 +28,21 @@
                     <div id="cat-breed"></div>
                     <div id="cat-confidence"></div>
                 </div>
+                <div class="radar-status">
+                    <h3>Radar Distance:</h3>
+                    <div class="radar-item">
+                        <span class="radar-label">Left:</span>
+                        <span id="left-distance">0.0 cm</span>
+                    </div>
+                    <div class="radar-item">
+                        <span class="radar-label">Right:</span>
+                        <span id="right-distance">0.0 cm</span>
+                    </div>
+                    <div class="radar-item">
+                        <span class="radar-label">Rear:</span>
+                        <span id="rear-distance">0.0 cm</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -54,6 +69,12 @@
                 } else {
                     $("#cat-breed").text("Analyzing...");
                     // $("#cat-confidence").text(`当前置信度: ${(data.confidence * 100).toFixed(2)}%`);
+                }
+                // 更新雷达数据
+                if (data.radar) {
+                    $("#left-distance").text(data.radar.Left.toFixed(1) + " cm");
+                    $("#right-distance").text(data.radar.Right.toFixed(1) + " cm");
+                    $("#rear-distance").text(data.radar.Rear.toFixed(1) + " cm");
                 }
             });
         }
